@@ -31,20 +31,36 @@
             </div>
           </el-col>
           <el-col :span="2">
-            <div id="tools">
-              <el-button type="text" icon="fa fa-paint-brush" @click="changeMode('draw')"></el-button>
+            <div class="tools">
+              <el-button type="text" icon="fa fa-paint-brush" @click="changeMode('draw')"> Draw </el-button>
+              <span class="title">Width</span>
               <el-input-number v-model="line.width" controls-position="right" :min="1" size="mini" @change="width()"></el-input-number>
+              <span class="title">Color</span>
               <el-color-picker v-model="line.style" size="mini" @change="style()"></el-color-picker>
-              <el-button type="text" icon="fa fa-arrows" @click="changeMode('move')"></el-button>
-              <el-button type="text" icon="fa fa-photo" @click="print"></el-button>
-              <el-button type="text" icon="fa fa-trash" @click="print"></el-button>
+              <el-button type="text" icon="fa fa-arrows" @click="changeMode('move')">  Move </el-button>
+              <el-button type="text" icon="fa fa-photo" @click="print"> Cover </el-button>
+              <el-button type="text" icon="fa fa-trash" @click="print"> Clear </el-button>
             </div>
           </el-col>
         </el-row>
         <el-row type="flex" :gutter="5" style="height: 65%">
-          <el-col :span="24" style="padding-top: 5px">
+          <el-col :span="22" style="padding-top: 5px">
             <div id="preview" ref="preview">
-              <canvas id="d3" ref="d3"></canvas>
+              <canvas id="d3" ref="d3"
+                @mousedown="grab($event)"
+                @mousemove="rotate($event)"
+                @mouseup="release($event)"></canvas>
+            </div>
+          </el-col>
+          <el-col :span="2">
+            <div class="tools">
+              <el-button type="text" icon="fa fa-pause" @click="animation(false)" v-if="preview.animation"> Pause </el-button>
+              <el-button type="text" icon="fa fa-play" @click="animation(true)" v-else="preview.animation"> Play </el-button>
+              <el-button type="text" icon="fa fa-trash" @click="print"> Clear </el-button>
+              <span class="title">Model</span>
+              <el-color-picker v-model="baseColor" size="mini" @change="changeBaseColor"></el-color-picker>
+              <span class="title">Scene</span>
+              <el-color-picker v-model="sceneColor" size="mini" @change="changeSceneColor"></el-color-picker>
             </div>
           </el-col>
         </el-row>
@@ -64,6 +80,8 @@
           style: '#54d595',
           width: 3
         },
+        baseColor: '#ffffff',
+        sceneColor: '#ffffff',
         modes: {
           move: true,
           resize: false,
@@ -81,6 +99,15 @@
       }
     },
     methods: {
+      animation(animation) {
+        this.preview.animation = animation;
+      },
+      changeBaseColor() {
+        this.preview.baseColor = this.baseColor;
+      },
+      changeSceneColor() {
+        this.preview.sceneColor = this.sceneColor;
+      },
       changeMode(mode) {
         this.modes[mode] = true;
         if (mode == 'draw') {
@@ -150,6 +177,9 @@
           this.moving = false;
         }
       },
+      grab(event) {
+
+      },
       empty() {}
     },
     mounted() {
@@ -163,8 +193,8 @@
         path: './src/assets/models/cup.json',
         width: this.$refs.preview.clientWidth - this.$refs.preview.style.paddingLeft - this.$refs.preview.style.paddingLeft,
         height: this.$refs.preview.clientHeight - this.$refs.preview.style.paddingBottom - this.$refs.preview.style.paddingTop,
-        sceneColor: 'dimgray',
-        modelColor: 'whitesmoke',
+        sceneColor: this.sceneColor,
+        modelColor: this.baseColor,
         animation: true
       });
       this.preview.render();
@@ -184,19 +214,25 @@
   body {
     padding: 5px;
   }
-  #tools > * {
-    display: block;
-    margin-right: 0;
-    margin-left: 0;
+  .tools > * {
+    display: block !important;
+    margin-right: 0 !important;
+    margin-left: 0 !important;
     text-align: center;
   }
-  #tools .el-button {
+  .tools .el-button {
     width: 100%;
   }
-  #tools .el-color-picker {
+  .tools .title {
+    font-family: Arial;
+    font weight: 500;
+    font-size: 14px;
+    color: #409EFF;
+  }
+  .tools .el-color-picker {
     padding: 0 auto;
   }
-  #tools .el-color-picker__trigger {
+  .tools .el-color-picker__trigger {
     border: none;
   }
   #app {
@@ -223,15 +259,12 @@
     font-size: 40px;
     margin: 0;
   }
-  #drawer {
+  #drawer, #preview {
     border: 1px dashed #d9d9d9;
     height: 100%;
   }
   #d2 {
     width: 100%;
-    height: 100%;
-  }
-  #preview {
     height: 100%;
   }
   .el-upload-list--picture .el-upload-list__item {

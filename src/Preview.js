@@ -6,8 +6,10 @@ class Preview {
     this.renderer.setClearColor(sceneColor);
     this.renderer.setSize(width, height);
     this.scene = new THREE.Scene();
-    this.scene.add(new THREE.AmbientLight(0xffffff, .4));
-    this.scene.add(new THREE.PointLight(0xffffff, .5));
+    this.light = new THREE.PointLight(0xffffff, .6);
+    this.light.position.set(-50, 5, 50);
+    this.scene.add(this.light);
+    this.scene.add(new THREE.AmbientLight(0xffffff, .5));
     this.camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 1000);
     const loader = new THREE.JSONLoader();
     loader.load(path, (geometry) => {
@@ -24,14 +26,21 @@ class Preview {
     });
     this.animation = animation;
   }
+  get do() {
+    return {
+      *rotate() {
+
+      }
+    };
+  }
   get dom() {
     return this.renderer.domElement;
   }
-  set picture (path) {
+  set picture(path) {
     const texture = new THREE.TextureLoader().load(path);
     this.front = texture;
   }
-  set base64 (src) {
+  set base64(src) {
     const image = new Image();
     image.src = src;
     const texture = new THREE.Texture();
@@ -41,7 +50,7 @@ class Preview {
     };
     this.front = texture;
   }
-  set front (texture) {
+  set front(texture) {
     texture.offset.set(0, -.38);
     texture.repeat.set(1, .75);
     const material = new THREE.MeshLambertMaterial({
@@ -50,12 +59,15 @@ class Preview {
     });
     this.materials[1] = material;
   }
-  set base (color) {
+  set baseColor(color) {
     const material = new THREE.MeshLambertMaterial({
       color: color,
       side: THREE.DoubleSide
     });
     this.materials[0] = material;
+  }
+  set sceneColor(color) {
+    this.renderer.setClearColor(color);
   }
   resize(width, height) {
     this.camera.aspect = width / height;
