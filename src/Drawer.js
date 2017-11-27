@@ -19,22 +19,31 @@ class Drawer {
     this.context.imageSmoothingQuality = 'high';
     this.layers = [];
   }
-  set line({ width, style, join, smoothing, cap }) {
-    if (width) {
-      this.context.lineWidth = width;
-    }
-    if (style) {
-      this.context.strokeStyle = style;
-    }
-    if (join) {
-      this.context.imageSmoothingQuality = smoothing;
-    }
-    if (smoothing) {
-      this.context.lineJoin = join;
-    }
-    if (cap) {
-      this.context.lineCap = cap;
-    }
+  get line() {
+    const context = this.context;
+    return {
+      set width(width) {
+        context.lineWidth = width;
+      },
+      get width() {
+        return context.lineWidth;
+      },
+      set style(style) {
+        context.strokeStyle = style;
+      },
+      get style() {
+        return context.strokeStyle;
+      },
+      set join(join) {
+        context.lineJoin = join;
+      },
+      set smoothing(smoothing) {
+        context.imageSmoothingQuality = smoothing;
+      },
+      set cap(cap) {
+        context.lineCap = cap;
+      }
+    };
   }
   get canvas() {
     return this.context.canvas
@@ -47,30 +56,6 @@ class Drawer {
   }
   get height() {
     return this.canvas.height;
-  }
-  async upload(file) {
-    const src = URL.createObjectURL(file);
-    const image = await Images.create(src);
-    this.layering.new(new Layer({
-      name: file.name.slice(0, file.name.lastIndexOf('.')),
-      image: Images.resize(image, this.width, this.height, this.scale)
-    }));
-    if (this.focused != null) {
-      this.focused += 1;
-    }
-  }
-  async redraw() {
-    this.context.clearRect(0, 0, this.width, this.height);
-    _.forEachRight(this.layers, ({ image, x, y }) => {
-      this.context.drawImage(image, x, y, image.width, image.height);
-    });
-    if (this.focused != null) {
-      const { x, y, image } = this.layers[this.focused];
-      this.context.fillRect(x - 10, y - 10, 20, 20);
-      this.context.fillRect(x + image.width - 10, y - 10, 20, 20);
-      this.context.fillRect(x + image.width - 10, y + image.height - 10, 20, 20);
-      this.context.fillRect(x - 10, y + image.height - 10, 20, 20);
-    }
   }
   get do() {
     const self = this;
@@ -220,6 +205,30 @@ class Drawer {
         });
         return canvas.toDataURL();
       }
+    }
+  }
+  async upload(file) {
+    const src = URL.createObjectURL(file);
+    const image = await Images.create(src);
+    this.layering.new(new Layer({
+      name: file.name.slice(0, file.name.lastIndexOf('.')),
+      image: Images.resize(image, this.width, this.height, this.scale)
+    }));
+    if (this.focused != null) {
+      this.focused += 1;
+    }
+  }
+  async redraw() {
+    this.context.clearRect(0, 0, this.width, this.height);
+    _.forEachRight(this.layers, ({ image, x, y }) => {
+      this.context.drawImage(image, x, y, image.width, image.height);
+    });
+    if (this.focused != null) {
+      const { x, y, image } = this.layers[this.focused];
+      this.context.fillRect(x - 10, y - 10, 20, 20);
+      this.context.fillRect(x + image.width - 10, y - 10, 20, 20);
+      this.context.fillRect(x + image.width - 10, y + image.height - 10, 20, 20);
+      this.context.fillRect(x - 10, y + image.height - 10, 20, 20);
     }
   }
 }

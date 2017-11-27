@@ -27,9 +27,16 @@ class Preview {
     this.animation = animation;
   }
   get do() {
+    const self = this;
     return {
-      *rotate() {
-
+      *rotate(x, y) {
+        let cord = yield;
+        while (cord) {
+          self.rotate((cord.x - x) / 30, (cord.y - y) / 30);
+          x = cord.x;
+          y = cord.y;
+          cord = yield;
+        }
       }
     };
   }
@@ -74,13 +81,13 @@ class Preview {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
   }
-  rotate({ x = 0, y = 0 }) {
+  rotate(x = 0, y = 0) {
     this.mesh.rotation.x += x;
     this.mesh.rotation.y += y;
   }
   animate() {
     if (this.mesh) {
-      this.rotate({ y: .02 })
+      this.rotate(0, .02);
     }
   }
   render() {

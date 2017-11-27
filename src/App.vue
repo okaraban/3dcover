@@ -178,7 +178,19 @@
         }
       },
       grab(event) {
-
+        this.preview.animation = false;
+        this.rotating = this.preview.do.rotate(0, event.offsetX);
+      },
+      rotate(event) {
+        if (this.rotating)
+        this.rotating.next({ x: 0, y: event.offsetX });
+      },
+      release(event) {
+        this.rotating.next();
+        this.rotating = false;
+        setTimeout(() => {
+          this.preview.animation = true;
+        }, 1500)
       },
       empty() {}
     },
@@ -188,7 +200,8 @@
         height: this.$refs.drawer.clientHeight,
         scale: 2
       });
-      this.drawer.line = this.line;
+      this.drawer.line.style = this.line.style;
+      this.drawer.line.width = this.line.width;
       this.preview = new Preview(this.$refs.d3, {
         path: './src/assets/models/cup.json',
         width: this.$refs.preview.clientWidth - this.$refs.preview.style.paddingLeft - this.$refs.preview.style.paddingLeft,
