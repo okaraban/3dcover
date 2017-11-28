@@ -20,6 +20,7 @@ class Canvas {
     clone.imageSmoothingQuality = context.imageSmoothingQuality;
     clone.lineJoin = context.lineJoin;
     clone.lineCap = context.lineCap;
+    clone.font = context.font;
     return clone;
   }
   static imageDataToBase64(imageData) {

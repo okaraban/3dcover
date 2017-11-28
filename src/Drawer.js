@@ -14,6 +14,7 @@ class Drawer {
     canvas.width = width * scale;
     canvas.height = height * scale;
     this.context = canvas.getContext('2d');
+    this.context.font = '48px serif';
     this.context.lineCap = 'round',
     this.context.lineJoin = 'round',
     this.context.imageSmoothingQuality = 'high';
@@ -49,12 +50,15 @@ class Drawer {
     return this.context.canvas
   }
   get source() {
-    const canvas = new Canvas(this.width, this.height);
-    const context = canvas.getContext();
+    const clone = Canvas.clone(this.context);
     _.forEachRight(this.layers, layer => {
-      context.drawImage(layer.image, layer.x, layer.y, layer.image.width, layer.image.height);
+      if (layer.type == 'image' ) {
+        clone.drawImage(layer.image, layer.x, layer.y, layer.width, layer.height);
+      } else {
+        clone.fillText(layer.image, layer.x, layer.y);
+      }
     });
-    return canvas.toDataURL();
+    return clone.canvas.toDataURL();
   }
   get width() {
     return this.canvas.width;
@@ -74,7 +78,28 @@ class Drawer {
           line.draw(cord.x, cord.y);
           cord = yield;
         }
-        thia.add(await line.toLayer());
+        self.add(await line.toLayer());
+      },
+      *text (x, y) {
+        let string = '';
+        self.add(new Layer({
+          type: 'text',
+          name: string,
+          image: string,
+          x: x * scale,
+          y: y * scale
+        }));
+        do {
+          string += yield;
+          console.log('string');
+          const m = self.context.measureText(string);
+          console.log(m);
+          self.layers[0].width = m.width;
+          self.layers[0].height = 48;
+          self.layers[0].image = string;
+          self.layers[0].name = string;
+          self.redraw();
+        } while(string);
       },
       *move(x, y) {
         const layer = self.select(x, y);
@@ -203,16 +228,26 @@ class Drawer {
   }
   async redraw() {
     this.context.clearRect(0, 0, this.width, this.height);
-    _.forEachRight(this.layers, ({ image, x, y }) => {
-      this.context.drawImage(image, x, y, image.width, image.height);
+    _.forEachRight(this.layers, layer => {
+      if ( layer.type == 'image' ) {
+        this.context.drawImage(layer.image, layer.x, layer.y, layer.width, layer.height);
+      } else {
+        this.context.fillText(layer.image, layer.x, layer.y);
+      }
     });
     if (this.focused) {
-      const { x, y, image } = this.focused;
-      this.context.fillRect(x - 10, y - 10, 20, 20);
-      this.context.fillRect(x + image.width - 10, y - 10, 20, 20);
-      this.context.fillRect(x + image.width - 10, y + image.height - 10, 20, 20);
-      this.context.fillRect(x - 10, y + image.height - 10, 20, 20);
+      this.context.fillRect(this.focused.x - 10, this.focused.y - 10, 20, 20);
+      this.context.fillRect(this.focused.x + this.focused.width - 10, this.focused.y - 10, 20, 20);
+      this.context.fillRect(this.focused.x + this.focused.width - 10, this.focused.y + this.focused.height - 10, 20, 20);
+      this.context.fillRect(this.focused.x - 10, this.focused.y + this.focused.height - 10, 20, 20);
     }
+  }
+  test () {
+    this.add(new Layer({
+      name: 'text',
+      type: 'text'
+      //image: Images.resize(image, this.width, this.height, this.scale)
+    }))
   }
 }
 

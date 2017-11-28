@@ -60,7 +60,7 @@ class Preview {
   set front(texture) {
     texture.offset.set(0, -.38);
     texture.repeat.set(1, .75);
-    const material = new THREE.MeshLambertMaterial({
+    const material = new THREE.MeshPhongMaterial({
       map: texture,
       transparent: true
     });
