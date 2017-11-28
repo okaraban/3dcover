@@ -87,7 +87,6 @@
           resize: false,
           draw: false
         },
-        onAction: false,
         selected: -1,
         preview: {},
         drawer: {}
@@ -126,56 +125,40 @@
         this.drawer.upload(file);
       },
       remove(layer) {
-        this.drawer.layering.remove(layer);
+        this.drawer.remove(layer);
       },
       print() {
         this.preview.base64 = this.drawer.base64;
       },
       raise(layer) {
-        this.drawer.layering.raise(layer);
+        this.drawer.raise(layer);
       },
       lower(layer) {
-        this.drawer.layering.lower(layer);
+        this.drawer.lower(layer);
       },
       choose(layer) {
-        this.drawer.layering.focus(layer);
+        this.drawer.focus(layer);
         this.modes.resize = true;
       },
       mousedown(event) {
         if (this.modes.draw) {
-          return this.drawing = this.drawer.do.draw(event.offsetX, event.offsetY);
+          return this.helper = this.drawer.helpers.draw(event.offsetX, event.offsetY);
         }
         if (this.modes.resize) {
-          this.resizing = this.drawer.do.resize(event.offsetX, event.offsetY);
+          this.helper = this.drawer.helpers.resize(event.offsetX, event.offsetY);
         }
         if (this.modes.move) {
-          this.moving = this.drawer.do.move(event.offsetX, event.offsetY);
+          this.helper = this.drawer.helpers.move(event.offsetX, event.offsetY);
         }
       },
       mousemove(event) {
-        if (this.drawing) {
-          this.drawing.next({ x: event.offsetX, y: event.offsetY });
-        }
-        if (this.resizing) {
-          this.resizing.next({ x: event.offsetX, y: event.offsetY });
-        }
-        if (this.moving) {
-          this.moving.next({ x: event.offsetX, y: event.offsetY });
+        if (this.helper) {
+          console.log(this.helper.next({ x: event.offsetX, y: event.offsetY }));
         }
       },
       mouseup(event) {
-        if (this.modes.draw) {
-          this.drawing.next();
-          this.drawing = false;
-        }
-        if (this.modes.resize) {
-          this.resizing.next();
-          return this.resizing = false;
-        }
-        if (this.modes.move) {
-          this.moving.next();
-          this.moving = false;
-        }
+        this.helper.next();
+        this.helper = false;
       },
       grab(event) {
         this.preview.animation = false;
@@ -208,7 +191,7 @@
         height: this.$refs.preview.clientHeight - this.$refs.preview.style.paddingBottom - this.$refs.preview.style.paddingTop,
         sceneColor: this.sceneColor,
         modelColor: this.baseColor,
-        animation: true
+        animation: false
       });
       this.preview.render();
     }
@@ -238,7 +221,7 @@
   }
   .tools .title {
     font-family: Arial;
-    font weight: 500;
+    font-weight: 500;
     font-size: 14px;
     color: #409EFF;
   }

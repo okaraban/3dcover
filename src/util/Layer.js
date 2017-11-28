@@ -9,6 +9,18 @@ class Layer {
     this.x = x;
     this.y = y;
   }
+  get width() {
+    return this.image.width;
+  }
+  set width(width) {
+    this.image.width = width;
+  }
+  get height() {
+    return this.image.height;
+  }
+  set height(height) {
+    this.image.height = height;
+  }
   static async fromSource(src, { x, y, name }) {
     const image = await Images.create(src);
     return new Layer({ name, image, x, y });
