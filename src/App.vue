@@ -10,8 +10,8 @@
         </el-upload>
         <transition-group name="flip-list" tag="ul" class="el-upload-list el-upload-list--picture">
           <li class="el-upload-list__item is-success" v-for="(layer, index) in layers" :key="layer.uid">
-            <img v-if="layer.type == 'image'" :src="layer.image.src" :alt="layer.name" class="el-upload-list__item-thumbnail">
-            <span>{{ layer.name }}</span>
+            <img v-if="layer.type == 'image'" :src="layer.data.src" :alt="layer.name" class="el-upload-list__item-thumbnail">
+            <div class="name">{{ layer.name }}</div>
             <el-button type="text" icon="fa fa-crosshairs" @click="choose(index)"></el-button>
             <el-button type="text" icon="fa fa-chevron-up" :disabled="index === 0" @click="raise(index)"></el-button>
             <el-button type="text" icon="fa fa-chevron-down" :disabled="index === layers.length - 1" @click="lower(index)"></el-button>
@@ -27,9 +27,7 @@
                 @mousedown="start($event)"
                 @mousemove="action($event)"
                 @mouseup="stop($event)"
-                @mouseout="stop($event)"
-                @keypress="test"
-                @keypress.enter="modes.text = false">
+                @mouseout="stop($event)">
               </canvas>
             </div>
           </el-col>
@@ -43,7 +41,7 @@
               <el-button :class="onMove && 'selected'" type="text" icon="fa fa-arrows" @click="changeMode('move')"> Move </el-button>
               <el-button :class="onText && 'selected'" type="text" icon="fa fa-font" @click="changeMode('text')"> Text </el-button>
               <el-button type="text" icon="fa fa-photo" @click="cover"> Cover </el-button>
-              <el-button type="text" icon="fa fa-trash" @click="test"> Clear </el-button>
+              <el-button type="text" icon="fa fa-trash" @click="cover"> Clear </el-button>
             </div>
           </el-col>
         </el-row>
@@ -61,7 +59,7 @@
               <el-button type="text" icon="fa fa-pause" @click="animation(false)" v-if="preview.animation"> Pause </el-button>
               <el-button type="text" icon="fa fa-play" @click="animation(true)" v-else> Play </el-button>
               <el-button type="text" icon="fa fa-trash" @click="cover"> Clear </el-button>
-              <span class="title">Model</span>
+              <span class="title"> Model </span>
               <el-color-picker v-model="baseColor" size="mini" @change="changeBaseColor"></el-color-picker>
               <span class="title">Scene</span>
               <el-color-picker v-model="sceneColor" size="mini" @change="changeSceneColor"></el-color-picker>
@@ -86,7 +84,7 @@
         },
         baseColor: '#ffffff',
         sceneColor: '#ffffff',
-        modes: 1, /// draw, text, resize, move
+        mode: 1, /// draw, text, resize, move
         selected: -1,
         preview: {},
         drawer: {}
@@ -97,16 +95,16 @@
         return this.drawer.layers;
       },
       onDraw() {
-        return this.modes & 0b1000;
+        return this.mode & 0b1000;
       },
       onText() {
-        return this.modes & 0b0100;
+        return this.mode & 0b0100;
       },
       onResize() {
-        return this.modes & 0b0010;
+        return this.mode & 0b0010;
       },
       onMove() {
-        return this.modes & 0b0001;
+        return this.mode & 0b0001;
       }
     },
     methods: {
@@ -162,30 +160,30 @@
       },
       start(event) {
         if (this.onDraw) {
-          return this.helper = this.drawer.helpers.draw(event.offsetX, event.offsetY);
+          return this.mouse = this.drawer.helpers.draw(event.offsetX, event.offsetY);
         }
         if (this.onText) {
-          this.helper = this.drawer.helpers.text(event.offsetX, event.offsetY);
-          return this.helper.next();
+          this.keyboard = this.drawer.helpers.text(event.offsetX, event.offsetY);
+          return this.keyboard.next();
         }
         if (this.onResize) {
-          this.helper = this.drawer.helpers.resize(event.offsetX, event.offsetY);
-          if (!this.helper.next().done)
+          this.mouse = this.drawer.helpers.resize(event.offsetX, event.offsetY);
+          if (!this.mouse.next().done)
             return
         }
         if (this.onMove) {
-          this.helper = this.drawer.helpers.move(event.offsetX, event.offsetY);
+          this.mouse = this.drawer.helpers.move(event.offsetX, event.offsetY);
         }
       },
       action(event) {
-        if (this.helper && !this.onText) {
-          this.helper.next({ x: event.offsetX, y: event.offsetY });
+        if (this.mouse) {
+          this.mouse.next({ x: event.offsetX, y: event.offsetY });
         }
       },
       stop(event) {
-        if (this.helper && !this.onText) {
-          this.helper.next();
-          this.helper = false;
+        if (this.mouse) {
+          this.mouse.next();
+          this.mouse = false;
         }
       },
       grab(event) {
@@ -203,10 +201,15 @@
           this.preview.animation = true;
         }, 1500)
       },
-      test(event) {
-        this.helper.next(event.key);
-      },
       empty() {}
+    },
+    created() {
+      document.body.addEventListener('keypress', (event => {
+        if (this.onText && this.keyboard) {
+          console.log(event);
+          this.keyboard.next(event.key);
+        }
+      }).bind(this));
     },
     mounted() {
       this.drawer = new Drawer(this.$refs.d2, {
@@ -235,6 +238,15 @@
   }
   .selected:hover {
     color: #003263;
+  }
+  .name {
+    white-space: nowrap;
+    font-family: Open Sans,Arial,sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    padding-right: 15px;
+    text-overflow: ellipsis;
+    overflow: hidden;
   }
   * {
     box-sizing: border-box;

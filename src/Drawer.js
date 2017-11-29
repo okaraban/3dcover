@@ -53,9 +53,9 @@ class Drawer {
     const clone = Canvas.clone(this.context);
     _.forEachRight(this.layers, layer => {
       if (layer.type == 'image' ) {
-        clone.drawImage(layer.image, layer.x, layer.y, layer.width, layer.height);
+        clone.drawImage(layer.data, layer.x, layer.y, layer.width, layer.height);
       } else {
-        clone.fillText(layer.image, layer.x, layer.y);
+        clone.fillText(layer.data, layer.x, layer.y);
       }
     });
     return clone.canvas.toDataURL();
@@ -82,10 +82,9 @@ class Drawer {
       },
       *text (x, y) {
         let string = yield;
-        self.add(new Layer({
+        self.add(new Layer(string, {
           type: 'text',
           name: string,
-          data: string,
           x: x * scale,
           y: y * scale
         }));
@@ -93,7 +92,7 @@ class Drawer {
           const m = self.context.measureText(string);
           self.layers[0].width = m.width;
           self.layers[0].height = 48;
-          self.layers[0].image = string;
+          self.layers[0].data = string;
           self.layers[0].name = string;
           self.redraw();
           string += yield;
@@ -219,18 +218,17 @@ class Drawer {
   async upload(file) {
     const src = URL.createObjectURL(file);
     const image = await Images.create(src);
-    this.add(new Layer({
-      name: file.name.slice(0, file.name.lastIndexOf('.')),
-      data: Images.resize(image, this.width, this.height, this.scale)
+    this.add(new Layer(Images.resize(image, this.width, this.height, this.scale), {
+      name: file.name.slice(0, file.name.lastIndexOf('.'))
     }));
   }
   async redraw() {
     this.context.clearRect(0, 0, this.width, this.height);
     _.forEachRight(this.layers, layer => {
       if ( layer.type == 'image' ) {
-        this.context.drawImage(layer.image, layer.x, layer.y, layer.width, layer.height);
+        this.context.drawImage(layer.data, layer.x, layer.y, layer.width, layer.height);
       } else {
-        this.context.fillText(layer.image, layer.x, layer.y);
+        this.context.fillText(layer.data, layer.x, layer.y);
       }
     });
     if (this.focused) {
