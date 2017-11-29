@@ -215,6 +215,11 @@ class Drawer {
     }
     this.redraw();
   }
+  drop() {
+    this.layers = [];
+    this.focused = null;
+    this.redraw();
+  }
   async upload(file) {
     const src = URL.createObjectURL(file);
     const image = await Images.create(src);

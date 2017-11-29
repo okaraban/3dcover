@@ -76,6 +76,9 @@ class Preview {
   set sceneColor(color) {
     this.renderer.setClearColor(color);
   }
+  clear() {
+    delete this.materials[1];
+  }
   resize(width, height) {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();

@@ -41,7 +41,7 @@
               <el-button :class="onMove && 'selected'" type="text" icon="fa fa-arrows" @click="changeMode('move')"> Move </el-button>
               <el-button :class="onText && 'selected'" type="text" icon="fa fa-font" @click="changeMode('text')"> Text </el-button>
               <el-button type="text" icon="fa fa-photo" @click="cover"> Cover </el-button>
-              <el-button type="text" icon="fa fa-trash" @click="cover"> Clear </el-button>
+              <el-button type="text" icon="fa fa-trash" @click="drawer.drop()"> Clear </el-button>
             </div>
           </el-col>
         </el-row>
@@ -56,9 +56,9 @@
           </el-col>
           <el-col :span="2">
             <div class="tools">
-              <el-button type="text" icon="fa fa-pause" @click="animation(false)" v-if="preview.animation"> Pause </el-button>
-              <el-button type="text" icon="fa fa-play" @click="animation(true)" v-else> Play </el-button>
-              <el-button type="text" icon="fa fa-trash" @click="cover"> Clear </el-button>
+              <el-button type="text" icon="fa fa-pause" @click="animate(false)" v-if="preview.animation"> Pause </el-button>
+              <el-button type="text" icon="fa fa-play" @click="animate(true)" v-else> Play </el-button>
+              <el-button type="text" icon="fa fa-trash" @click="preview.clear()"> Clear </el-button>
               <span class="title"> Model </span>
               <el-color-picker v-model="baseColor" size="mini" @change="changeBaseColor"></el-color-picker>
               <span class="title">Scene</span>
@@ -84,6 +84,7 @@
         },
         baseColor: '#ffffff',
         sceneColor: '#ffffff',
+        animation: false,
         mode: 1, /// draw, text, resize, move
         selected: -1,
         preview: {},
@@ -108,8 +109,8 @@
       }
     },
     methods: {
-      animation(animation) {
-        this.preview.animation = animation;
+      animate(animation) {
+        this.preview.animation = this.animation = animation;
       },
       changeBaseColor() {
         this.preview.baseColor = this.baseColor;
@@ -209,14 +210,14 @@
       },
       rotate(event) {
         if (this.rotating)
-        this.rotating.next({ x: 0, y: event.offsetX });
+          this.rotating.next({ x: 0, y: event.offsetX });
       },
       release(event) {
         this.rotating.next();
         this.rotating = false;
         setTimeout(() => {
-          this.preview.animation = true;
-        }, 1500)
+          this.preview.animation = this.animation;
+        }, 1500);
       },
       empty() {}
     },
