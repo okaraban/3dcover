@@ -11,7 +11,7 @@
         <transition-group name="flip-list" tag="ul" class="el-upload-list el-upload-list--picture">
           <li class="el-upload-list__item is-success" v-for="(layer, index) in layers" :key="layer.uid">
             <img v-if="layer.type == 'image'" :src="layer.image.src" :alt="layer.name" class="el-upload-list__item-thumbnail">
-            <div>{{ layer.name }}</div>
+            <span>{{ layer.name }}</span>
             <el-button type="text" icon="fa fa-crosshairs" @click="choose(index)"></el-button>
             <el-button type="text" icon="fa fa-chevron-up" :disabled="index === 0" @click="raise(index)"></el-button>
             <el-button type="text" icon="fa fa-chevron-down" :disabled="index === layers.length - 1" @click="lower(index)"></el-button>
@@ -24,10 +24,10 @@
           <el-col :span="22">
             <div id="drawer" ref="drawer">
               <canvas id="d2" ref="d2"
-                @mousedown="mousedown($event)"
-                @mousemove="mousemove($event)"
-                @mouseup="mouseup($event)"
-                @mouseout="mouseup($event)"
+                @mousedown="start($event)"
+                @mousemove="action($event)"
+                @mouseup="stop($event)"
+                @mouseout="stop($event)"
                 @keypress="test"
                 @keypress.enter="modes.text = false">
               </canvas>
@@ -35,13 +35,13 @@
           </el-col>
           <el-col :span="2">
             <div class="tools">
-              <el-button :class="modes & 0b1000 ? 'selected' : ''" type="text" icon="fa fa-paint-brush" @click="changeMode(0b1000)"> Draw </el-button>
+              <el-button :class="onDraw && 'selected'" type="text" icon="fa fa-paint-brush" @click="changeMode('draw')"> Draw </el-button>
               <span class="title">Width</span>
               <el-input-number v-model="line.width" controls-position="right" :min="1" size="mini" @change="width()"></el-input-number>
               <span class="title">Color</span>
               <el-color-picker v-model="line.style" size="mini" @change="style()"></el-color-picker><!--/// draw, text, resize, move-->
-              <el-button :class="modes & 0b0001 && 'selected'" type="text" icon="fa fa-arrows" @click="changeMode(0b0011)"> Move </el-button>
-              <el-button :class="modes & 0b0100 && 'selected'" type="text" icon="fa fa-font" @click="changeMode(0b0100)"> Text </el-button>
+              <el-button :class="onMove && 'selected'" type="text" icon="fa fa-arrows" @click="changeMode('move')"> Move </el-button>
+              <el-button :class="onText && 'selected'" type="text" icon="fa fa-font" @click="changeMode('text')"> Text </el-button>
               <el-button type="text" icon="fa fa-photo" @click="cover"> Cover </el-button>
               <el-button type="text" icon="fa fa-trash" @click="test"> Clear </el-button>
             </div>
@@ -95,6 +95,18 @@
     computed: {
       layers() {
         return this.drawer.layers;
+      },
+      onDraw() {
+        return this.modes & 0b1000;
+      },
+      onText() {
+        return this.modes & 0b0100;
+      },
+      onResize() {
+        return this.modes & 0b0010;
+      },
+      onMove() {
+        return this.modes & 0b0001;
       }
     },
     methods: {
@@ -108,7 +120,20 @@
         this.preview.sceneColor = this.sceneColor;
       },
       changeMode(mode) {
-        this.modes = mode;
+        switch (mode) {
+          case 'draw':
+            this.mode = 0b1000;
+            break;
+          case 'text':
+            this.mode = 0b0100;
+            break;
+          case 'resize':
+            this.mode = 0b0011;
+            break;
+          case 'move':
+            this.mode = 0b0001;
+            break;
+        }
       },
       style() {
         this.drawer.line.style = this.line.style;
@@ -133,32 +158,32 @@
       },
       choose(layer) {
         this.drawer.focus(layer);
-        this.modes |= 0b0010;
+        this.changeMode('resize');
       },
-      mousedown(event) {
-        if (this.modes & 0b1000) {
+      start(event) {
+        if (this.onDraw) {
           return this.helper = this.drawer.helpers.draw(event.offsetX, event.offsetY);
         }
-        if (this.modes & 0b0100) {
+        if (this.onText) {
           this.helper = this.drawer.helpers.text(event.offsetX, event.offsetY);
           return this.helper.next();
         }
-        if (this.modes & 0b0010) {
+        if (this.onResize) {
           this.helper = this.drawer.helpers.resize(event.offsetX, event.offsetY);
           if (!this.helper.next().done)
             return
         }
-        if (this.modes & 0b0001) {
+        if (this.onMove) {
           this.helper = this.drawer.helpers.move(event.offsetX, event.offsetY);
         }
       },
-      mousemove(event) {
-        if (this.helper && ~this.modes & 0b0100) {
+      action(event) {
+        if (this.helper && !this.onText) {
           this.helper.next({ x: event.offsetX, y: event.offsetY });
         }
       },
-      mouseup(event) {
-        if (this.helper && ~this.modes & 0b0100) {
+      stop(event) {
+        if (this.helper && !this.onText) {
           this.helper.next();
           this.helper = false;
         }

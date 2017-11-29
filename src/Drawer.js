@@ -81,25 +81,23 @@ class Drawer {
         self.add(await line.toLayer());
       },
       *text (x, y) {
-        let string = '';
+        let string = yield;
         self.add(new Layer({
           type: 'text',
           name: string,
-          image: string,
+          data: string,
           x: x * scale,
           y: y * scale
         }));
-        do {
-          string += yield;
-          console.log('string');
+        while (string) {
           const m = self.context.measureText(string);
-          console.log(m);
           self.layers[0].width = m.width;
           self.layers[0].height = 48;
           self.layers[0].image = string;
           self.layers[0].name = string;
           self.redraw();
-        } while(string);
+          string += yield;
+        }
       },
       *move(x, y) {
         const layer = self.select(x, y);
@@ -223,7 +221,7 @@ class Drawer {
     const image = await Images.create(src);
     this.add(new Layer({
       name: file.name.slice(0, file.name.lastIndexOf('.')),
-      image: Images.resize(image, this.width, this.height, this.scale)
+      data: Images.resize(image, this.width, this.height, this.scale)
     }));
   }
   async redraw() {
@@ -241,13 +239,6 @@ class Drawer {
       this.context.fillRect(this.focused.x + this.focused.width - 10, this.focused.y + this.focused.height - 10, 20, 20);
       this.context.fillRect(this.focused.x - 10, this.focused.y + this.focused.height - 10, 20, 20);
     }
-  }
-  test () {
-    this.add(new Layer({
-      name: 'text',
-      type: 'text'
-      //image: Images.resize(image, this.width, this.height, this.scale)
-    }))
   }
 }
 
