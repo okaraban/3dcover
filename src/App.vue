@@ -12,7 +12,7 @@
           <li class="el-upload-list__item is-success" v-for="(layer, index) in layers" :key="layer.uid">
             <img v-if="layer.type == 'image'" :src="layer.data.src" :alt="layer.name" class="el-upload-list__item-thumbnail">
             <div class="name">{{ layer.name }}</div>
-            <el-button type="text" icon="fa fa-crosshairs" @click="choose(index)"></el-button>
+            <el-button type="text" :class="selected == index && 'selected'" icon="fa fa-crosshairs" @click="choose(index)"></el-button>
             <el-button type="text" icon="fa fa-chevron-up" :disabled="index === 0" @click="raise(index)"></el-button>
             <el-button type="text" icon="fa fa-chevron-down" :disabled="index === layers.length - 1" @click="lower(index)"></el-button>
             <i class="el-icon-close" @click="remove(index)"></i>
@@ -149,14 +149,31 @@
         this.preview.base64 = this.drawer.source;
       },
       raise(layer) {
+        if (this.selected == layer) {
+          this.selected -= 1;
+        } else if (this.selected + 1 == layer) {
+          this.selected += 1;
+        }
         this.drawer.raise(layer);
       },
       lower(layer) {
+        if (this.selected == layer) {
+          this.selected += 1;
+        } else if (this.selected - 1 == layer) {
+          this.selected -= 1;
+        }
         this.drawer.lower(layer);
       },
       choose(layer) {
-        this.drawer.focus(layer);
-        this.changeMode('resize');
+        if (this.selected == layer) {
+          this.drawer.defocus(layer);
+          this.selected = -1;
+          this.changeMode('move');
+        } else {
+          this.drawer.focus(layer);
+          this.selected = layer;
+          this.changeMode('resize');
+        }
       },
       start(event) {
         if (this.onDraw) {
