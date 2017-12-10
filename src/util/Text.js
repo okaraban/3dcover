@@ -1,27 +1,69 @@
 import Canvas from './Canvas'
-import Layer from './Layer'
-
+/**
+ * @interface LayerData
+ */
 class Text {
-  constructor(context, { scale, font, color, width, style}) {
-    this.text = '';
-    this.context = context;
-    this.scale = scale;
+  constructor({ type, family, size, color }) {
+    this.data = '';
+    this.style = { 
+      type: `${type.italic ? 'italic' : ''} ${type.bold ? 'bold' : ''}`,
+      family,
+      size,
+      color
+    };
   }
-  print(string) {
-    string 
+  get type() {
+    return 'text';
   }
-  async toLayer() {
-    const context = Canvas.clone(this.context);
-    context.stroke(this.path);
-    const extra = context.lineWidth / 2;
-    const x = this.min.x - extra;
-    const y = this.min.y - extra;
-    const width = this.max.x - x  + extra * 2;
-    const height = this.max.y - y + extra * 2;
-    const imageData = context.getImageData(x, y, width, height);
-    const base64 = Canvas.imageDataToBase64(imageData);
-    const layer = await Layer.fromSource(base64, { x, y });
-    return layer;
+  get width() {
+    const context = Canvas.context({
+      font: this.font
+    });
+    const { width } = context.measureText(this.data);
+    return width;
+  }
+  get height() {
+    return this.style.size;
+  }
+  add(string) {
+    this.data += string;
+  }
+  remove(count) {
+    this.data = this.data.slice(0, -count);
+  }
+  includes(rx, ry, x, y) {
+    return rx >= x - 5 && 
+    rx <= x + this.width + 5 &&
+    ry <= y + 10 &&
+    ry >= y - this.height;
+  }
+  select(rx, ry, x, y) {
+    return rx >= x && 
+      rx <= x + this.width &&
+      ry <= y &&
+      ry >= y - this.height;
+  }
+  draw(context, x, y) {
+    context.save();
+    context.font = this.font;
+    if (this.style.type.stroke) {
+      context.strokeStyle = this.style.color;
+      context.strokeText(this.data, x, y);
+    } else {
+      context.fillStyle = this.style.color;
+      context.fillText(this.data, x, y);
+    }
+    context.restore();
+  }
+  frame(context, x, y) {
+    context.save();
+    context.setLineDash([10]);
+    context.strokeRect(x - 5, y - this.height - 5, this.width + 10, this.height + 10);
+    context.restore();
+  }
+  // specific
+  get font() {
+    return `${this.style.type} ${this.style.size}px ${this.style.family}`;
   }
 }
 

@@ -12,6 +12,22 @@ class Canvas {
   toDataURL() {
     return this.canvas.toDataURL();
   }
+  static context({ size, ...options }) {
+    const canvas = document.createElement('canvas');
+    if (size) {
+      canvas.width = size.width;
+      canvas.height = size.height;
+    }
+    const context = canvas.getContext('2d');
+    context.lineCap = 'round',
+    context.lineJoin = 'round',
+    context.textBaseline = 'ideographic';
+    context.imageSmoothingQuality = 'high';
+    for (let option in options) {
+      context[option] = options[option];
+    }
+    return context;
+  }
   static clone(context) {
     const canvas = new Canvas(context.canvas.width, context.canvas.height);
     const clone = canvas.getContext('2d');
@@ -22,12 +38,6 @@ class Canvas {
     clone.lineCap = context.lineCap;
     clone.font = context.font;
     return clone;
-  }
-  static imageDataToBase64(imageData) {
-    const canvas = new Canvas(imageData.width, imageData.height);
-    const context = canvas.getContext('2d');
-    context.putImageData(imageData, 0, 0);
-    return canvas.toDataURL();
   }
 } 
 

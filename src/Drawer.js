@@ -1,7 +1,8 @@
 import _ from 'lodash'
-import Layer from './util/Layer.js'
-import Line from './util/Line.js'
-import Images from './util/Images.js'
+import Layer from './util/Layer'
+import Line from './util/Line'
+import Text from './util/Text'
+import Picture from './util/Picture'
 import Canvas from './util/Canvas'
 
 class Drawer {
@@ -14,9 +15,10 @@ class Drawer {
     canvas.width = width * scale;
     canvas.height = height * scale;
     this.context = canvas.getContext('2d');
-    this.context.font = '48px serif';
+    this.context.lineWidth = 2,
     this.context.lineCap = 'round',
     this.context.lineJoin = 'round',
+    this.context.textBaseline = 'ideographic';
     this.context.imageSmoothingQuality = 'high';
     this.layers = [];
   }
@@ -29,10 +31,10 @@ class Drawer {
       get width() {
         return context.lineWidth;
       },
-      set style(style) {
+      set color(style) {
         context.strokeStyle = style;
       },
-      get style() {
+      get color() {
         return context.strokeStyle;
       },
       set join(join) {
@@ -46,18 +48,17 @@ class Drawer {
       }
     };
   }
+  set line(line) {
+    for (let prop in line) {
+      this.line[prop] = line[prop];
+    }
+  }
   get canvas() {
     return this.context.canvas
   }
   get source() {
     const clone = Canvas.clone(this.context);
-    _.forEachRight(this.layers, layer => {
-      if (layer.type == 'image' ) {
-        clone.drawImage(layer.data, layer.x, layer.y, layer.width, layer.height);
-      } else {
-        clone.fillText(layer.data, layer.x, layer.y);
-      }
-    });
+    _.forEachRight(this.layers, layer => layer.draw(clone));
     return clone.canvas.toDataURL();
   }
   get width() {
@@ -70,32 +71,36 @@ class Drawer {
     const self = this;
     const { context, scale } = this;
     return {
-      async *draw(x, y) {
-        const line = new Line(context, { scale });
-        line.start(x, y);
+      *draw(x, y, { style }) {
+        const line = new Line(style);
+        self.add(new Layer(line, {
+          x: x * scale,
+          y: y * scale
+        }));
         let cord = yield;
         while (cord) {
-          line.draw(cord.x, cord.y);
+          line.add((cord.x - x) * scale, (cord.y - y) * scale);
+          self.redraw();
           cord = yield;
         }
-        self.add(await line.toLayer());
       },
-      *text (x, y) {
+      *text (x, y, { style }) {
         let string = yield;
-        self.add(new Layer(string, {
-          type: 'text',
+        const text = new Text(style);
+        self.add(new Layer(text, {
           name: string,
           x: x * scale,
           y: y * scale
         }));
-        while (string) {
-          const m = self.context.measureText(string);
-          self.layers[0].width = m.width;
-          self.layers[0].height = 48;
-          self.layers[0].data = string;
-          self.layers[0].name = string;
+        while (string != 'Enter') {
+          if (string == 'Backspace') {
+            text.remove(1);
+          } else {
+            text.add(string);
+          }
+          self.layers[0].name = text.data;
           self.redraw();
-          string += yield;
+          string = yield;
         }
       },
       *move(x, y) {
@@ -131,14 +136,12 @@ class Drawer {
     this.redraw();
   }
   select(x, y) {
-    return [this.focused, ...this.layers].find(layer => {
-      if (layer) {
-        return x * this.scale >= layer.x && 
-        x * this.scale <= layer.x + layer.width &&
-        y * this.scale >= layer.y &&
-        y * this.scale <= layer.y + layer.height;
-      }
-    });
+    x *= this.scale;
+    y *= this.scale;
+    if (this.focused && this.focused.select(x, y, { expanded: true })) {
+      return this.focused;
+    }
+    return this.layers.find(layer => layer.select(x, y));
   }
   move(layer, rx, ry) {
     layer.x += rx * this.scale;
@@ -169,30 +172,7 @@ class Drawer {
     this.redraw();
   }
   resize(point, rx, ry) {
-    rx *= this.scale;
-    ry *= this.scale;
-    switch (point) {
-      case 'rb':
-        this.focused.width += rx;
-        this.focused.height += ry;
-      break;
-      case 'lb':
-        this.focused.width -= rx;
-        this.focused.height += ry;
-        this.focused.x += rx;
-      break;
-      case 'rt':
-        this.focused.width += rx;
-        this.focused.height -= ry;
-        this.focused.y += ry;
-      break;
-      case 'lt':
-        this.focused.width -= rx;
-        this.focused.height -= ry;
-        this.focused.x += rx;
-        this.focused.y += ry;
-      break;
-    }
+    this.focused.resize(point, rx * this.scale, ry * this.scale);
   }
   raise(index) {
     if (index > 0 && index < this.layers.length) {
@@ -209,10 +189,10 @@ class Drawer {
     }
   }
   remove(index) {
-    this.layers.splice(index, 1);
-    if (this.focused == this.layers[index]) {
+    if (this.focused == this.layers[index]) { 
       this.focused = null;
     }
+    this.layers.splice(index, 1);
     this.redraw();
   }
   drop() {
@@ -220,27 +200,26 @@ class Drawer {
     this.focused = null;
     this.redraw();
   }
+  async conversion(index) {
+    await this.layers[index].conversion();
+    this.redraw();
+  }
   async upload(file) {
     const src = URL.createObjectURL(file);
-    const image = await Images.create(src);
-    this.add(new Layer(Images.resize(image, this.width, this.height, this.scale), {
+    const image = Picture.normalize(await Picture.create(src), {
+      width: this.width,
+      height: this.height
+    });
+    const picture = new Picture(image);
+    this.add(new Layer(picture, {
       name: file.name.slice(0, file.name.lastIndexOf('.'))
     }));
   }
   async redraw() {
     this.context.clearRect(0, 0, this.width, this.height);
-    _.forEachRight(this.layers, layer => {
-      if ( layer.type == 'image' ) {
-        this.context.drawImage(layer.data, layer.x, layer.y, layer.width, layer.height);
-      } else {
-        this.context.fillText(layer.data, layer.x, layer.y);
-      }
-    });
+    _.forEachRight(this.layers, layer => layer.draw(this.context));
     if (this.focused) {
-      this.context.fillRect(this.focused.x - 10, this.focused.y - 10, 20, 20);
-      this.context.fillRect(this.focused.x + this.focused.width - 10, this.focused.y - 10, 20, 20);
-      this.context.fillRect(this.focused.x + this.focused.width - 10, this.focused.y + this.focused.height - 10, 20, 20);
-      this.context.fillRect(this.focused.x - 10, this.focused.y + this.focused.height - 10, 20, 20);
+      this.focused.frame(this.context);
     }
   }
 }

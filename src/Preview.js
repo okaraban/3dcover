@@ -1,30 +1,67 @@
 import * as THREE from 'three'
 
 class Preview {
-  constructor(canvas, { path, width, height, sceneColor, modelColor, animation } = {}) {
+  constructor(canvas, { path, width, height, sceneColor, modelColor, animation, scene } = {}) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     this.renderer.setClearColor(sceneColor);
     this.renderer.setSize(width, height);
-    this.scene = new THREE.Scene();
-    this.light = new THREE.PointLight(0xffffff, .6);
-    this.light.position.set(-50, 5, 50);
-    this.scene.add(this.light);
-    this.scene.add(new THREE.AmbientLight(0xffffff, .5));
     this.camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 1000);
-    const loader = new THREE.JSONLoader();
-    loader.load(path, (geometry) => {
-      this.materials = [new THREE.MeshLambertMaterial({
-        color: modelColor,
-        side: THREE.DoubleSide
-      })]
-      this.mesh = new THREE.Mesh(geometry, this.materials);
-      this.mesh.scale.x = this.mesh.scale.y = this.mesh.scale.z = .8;
-      this.mesh.translation = geometry.center();
-      this.mesh.rotation.x = .4;
-      this.mesh.position.z = -7;
-      this.scene.add(this.mesh);
-    });
+    if (scene) {
+      this.scene = scene;
+      this.mesh = scene.children[2];
+    } else {
+      this.scene = new THREE.Scene();
+      this.pointLight = new THREE.PointLight(0xffffff, .6);
+      this.pointLight.position.set(-50, 5, 50);
+      this.ambidentLight = new THREE.AmbientLight(0xffffff, .5);
+      this.scene.add(this.pointLight, this.ambidentLight);
+      const loader = new THREE.JSONLoader();
+      loader.load(path, (geometry) => {
+        this.materials = [new THREE.MeshLambertMaterial({
+          color: modelColor,
+          side: THREE.DoubleSide
+        })]
+        this.mesh = new THREE.Mesh(geometry, this.materials);
+        this.mesh.scale.x = this.mesh.scale.y = this.mesh.scale.z = .8;
+        this.mesh.translation = geometry.center();
+        this.mesh.rotation.x = .4;
+        this.mesh.position.z = -7;
+        this.scene.add(this.mesh);
+      });
+    }
     this.animation = animation;
+  }
+  mirror(canvas, { width, height }) {
+    class Mirror {
+      constructor(canvas, { width, height, sceneColor, scene }) {
+        this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        this.renderer.setClearColor(sceneColor);
+        this.renderer.setSize(width, height);
+        this.camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 1000);
+        this.scene = scene;
+      }
+      render() {
+        this.renderer.render(this.scene, this.camera);
+        requestAnimationFrame(this.render.bind(this));
+      }
+    }
+    return new Mirror(canvas, {
+      sceneColor: this.renderer.getClearColor(),
+      width,
+      height,
+      scene: this.scene
+    });
+  }
+  clone (canvas, { width, height }) {
+    const preview = new Preview(canvas, {
+      width,
+      height,
+      animation: this.animation,
+      sceneColor: this.renderer.getClearColor(),
+      scene: this.scene
+    });
+    preview.render();
+    return preview;
   }
   get do() {
     const self = this;
