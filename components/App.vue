@@ -1,123 +1,126 @@
 <template>
-    <el-row type="flex" :gutter="5" id="app" class="stretch">
-      <el-col :span="18" class="stretch">
-        <div class="tool horizontal space around">
-          <el-select :disabled="!onText" v-model="font.family" size="mini">
-            <el-option v-for="font in fonts" :key="font" :label="font" :value="font" :style="`font-family: ${font}`" />
-          </el-select>
-          <el-input-number
-            :disabled="!onText && !onDraw"
-            v-model="number"
-            :min="1"
-            size="mini"
-          />
-          <span class="block title">
-            <el-color-picker v-model="color" size="mini"></el-color-picker>
-            <span class="title"> Color </span>
-          </span>
-        </div>
-        <el-row type="flex" :gutter="5" class ="grow">
-          <el-col :span="2">
-            <div class="tool vertical">
-              <el-dropdown @command="changeFontType" :hide-on-click="false">
-                <el-button type="text" :class="onText && 'selected'" @click="changeMode('text')">
-                  <i class="fa fa-font"></i> Text
-                </el-button>
-                <el-dropdown-menu slot="dropdown">
-                  <el-dropdown-item :class="font.type.bold && 'selected'" command="bold">
-                    <i class="fa fa-bold"></i> Bold
-                  </el-dropdown-item>
-                  <el-dropdown-item :class="font.type.italic && 'selected'" command="italic">
-                    <i class="fa fa-italic"></i> Italic
-                  </el-dropdown-item>
-                </el-dropdown-menu>
-              </el-dropdown>
-              <el-button :class="onDraw && 'selected'" type="text" icon="fa fa-paint-brush" @click="changeMode('draw')"> Draw </el-button>
-              <el-button :class="onMove && 'selected'" type="text" icon="fa fa-arrows" @click="changeMode('move')"> Move </el-button>
-              <el-button type="text" icon="fa fa-trash" @click="drawer.drop()"> Clear </el-button>
-            </div>
-          </el-col>
-          <el-col :span="22">
-            <div id="drawer" ref="drawer">
-              <canvas id="d2" ref="d2"
-                @mousedown="start($event)"
-                @mousemove="action($event)"
-                @mouseup="stop($event)"
-                @mouseout="stop($event)">
-              </canvas>
-            </div>
-            <div class="tool horizontal">
-              <OrderForm :source="drawer.source" />
-            </div>
-          </el-col>
-        </el-row>
-      </el-col>
-      <el-col :span="6" class="column">
-        <div class="tool horizontal space around">
-          <el-button type="text" icon="fa fa-pause" @click="animate(false)" v-if="preview.animation"> Pause </el-button>
-          <el-button type="text" icon="fa fa-play" @click="animate(true)" v-else> Play </el-button>
-          <el-button type="text" icon="fa fa-share" @click="cover"> Cover </el-button>
-          <el-button type="text" icon="fa fa-trash" @click="preview.clear()"> Clear </el-button>
-          <span class="block title">
-            <el-color-picker v-model="sceneColor" size="mini" @change="changeSceneColor"></el-color-picker>
-            <span class="title"> Scene </span>
-          </span>
-        </div>
-        <div id="previewMini" ref="previewMini">
-          <canvas id="mini3d" ref="mini3d" @click="show">
-            Sorry your browser doesn't seem to support webgl! :(
-          </canvas>
-        </div>
-        <el-dialog
-          custom-class="column"
-          :visible.sync="dialogVisible"
-          :fullscreen="true">
-          <span slot="title">
-            <el-button type="primary" icon="fa fa-paper-plane"> Send to the Server </el-button>
-          </span>
-          <div id="previewMax" ref="previewMax">
-            <canvas id="max3d" ref="max3d"
-              @mousedown="grab($event)"
-              @mousemove="rotate($event)"
-              @mouseup="release($event)">
+  <el-row type="flex" :gutter="5" id="app" class="stretch">
+    <el-col :span="18" class="stretch">
+      <div class="tool horizontal space around">
+        <el-select :disabled="!onText" v-model="font.family" size="mini">
+          <el-option v-for="font in fonts" :key="font" :label="font" :value="font" :style="`font-family: ${font}`" />
+        </el-select>
+        <el-input-number
+          :disabled="!onText && !onDraw"
+          v-model="number"
+          :min="1"
+          size="mini"
+        />
+        <span class="block title">
+          <el-color-picker v-model="color" size="mini"></el-color-picker>
+          <span class="title"> Color </span>
+        </span>
+      </div>
+      <el-row type="flex" :gutter="5" class ="grow">
+        <el-col :span="2">
+          <div class="tool vertical">
+            <el-dropdown @command="changeFontType" :hide-on-click="false">
+              <el-button type="text" :class="onText && 'selected'" @click="changeMode('text')">
+                <i class="fa fa-font"></i> Text
+              </el-button>
+              <el-dropdown-menu slot="dropdown">
+                <el-dropdown-item :class="font.type.bold && 'selected'" command="bold">
+                  <i class="fa fa-bold"></i> Bold
+                </el-dropdown-item>
+                <el-dropdown-item :class="font.type.italic && 'selected'" command="italic">
+                  <i class="fa fa-italic"></i> Italic
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
+            <el-button :class="onDraw && 'selected'" type="text" icon="fa fa-paint-brush" @click="changeMode('draw')"> Draw </el-button>
+            <el-button :class="onMove && 'selected'" type="text" icon="fa fa-arrows" @click="changeMode('move')"> Move </el-button>
+            <el-button type="text" icon="fa fa-trash" @click="drawer.drop()"> Clear </el-button>
+          </div>
+        </el-col>
+        <el-col :span="22">
+          <div id="drawer" ref="drawer">
+            <canvas id="d2" ref="d2"
+              @mousedown="start($event)"
+              @mousemove="action($event)"
+              @mouseup="stop($event)"
+              @mouseout="stop($event)">
             </canvas>
           </div>
-          <span slot="footer">
-            <el-button icon="fa fa-pause" @click="animate(false)" v-if="preview.animation"> Pause </el-button>
-            <el-button icon="fa fa-play" @click="animate(true)" v-else> Play </el-button>
-            <el-button icon="fa fa-photo" @click="cover"> Cover </el-button>
-            <el-button icon="fa fa-trash" @click="preview.clear()"> Clear </el-button>
-            <el-button @click="dialogVisible = false"> Cancel </el-button>
-          </span>
-        </el-dialog>
-        <el-upload id="upload" drag action="false" :http-request="empty" :before-upload="upload" :show-file-list="false" accept="image/*">
-          <div slot="tip" class="el-upload__tip">jpg/png files with a size less than 500kb</div>
-          <i class="el-icon-upload"></i>
-          <div class="el-upload__text">Drop file here or
-            <em>click to upload</em>
+          <div class="tool horizontal">
+            <order-form :source="source" />
           </div>
-        </el-upload>
-        <transition-group name="flip-list" tag="ul" class="el-upload-list el-upload-list--picture grow">
-          <li v-for="(layer, index) in layers" :key="layer.uid" class="el-upload-list__item" :class="selected == index && 'selected'">
-            <img :src="layer.type == 'picture' ? layer.src : '../assets/img/text.png'" :alt="layer.name" class="el-upload-list__item-thumbnail" @click="choose(index)">
-            <div class="name">{{ layer.name }}</div>
-            <el-button type="text" icon="fa fa-chevron-up" :disabled="index === 0" @click="raise(index)" />
-            <el-button type="text" icon="fa fa-chevron-down" :disabled="index === layers.length - 1" @click="lower(index)" />
-            <el-button type="text" icon="fa fa-image" @click="conversion(index)" />
-            <i class="el-icon-close" @click="remove(index)"></i>
-          </li>
-        </transition-group>
-      </el-col>
-    </el-row>
+        </el-col>
+      </el-row>
+    </el-col>
+    <el-col :span="6" class="column">
+      <div class="tool horizontal space around">
+        <el-button type="text" icon="fa fa-pause" @click="animate(false)" v-if="preview.animation"> Pause </el-button>
+        <el-button type="text" icon="fa fa-play" @click="animate(true)" v-else> Play </el-button>
+        <el-button type="text" icon="fa fa-share" @click="cover"> Cover </el-button>
+        <el-button type="text" icon="fa fa-trash" @click="preview.clear()"> Clear </el-button>
+        <span class="block title">
+          <el-color-picker v-model="sceneColor" size="mini" @change="changeSceneColor"></el-color-picker>
+          <span class="title"> Scene </span>
+        </span>
+      </div>
+      <div id="previewMini" ref="previewMini">
+        <canvas id="mini3d" ref="mini3d" @click="show">
+          Sorry your browser doesn't seem to support webgl! :(
+        </canvas>
+      </div>
+      <el-dialog
+        custom-class="column"
+        :visible.sync="dialogVisible"
+        :fullscreen="true">
+        <span slot="title">
+          <el-button type="primary" icon="fa fa-paper-plane"> Send to the Server </el-button>
+        </span>
+        <div id="previewMax" ref="previewMax">
+          <canvas id="max3d" ref="max3d"
+            @mousedown="grab($event)"
+            @mousemove="rotate($event)"
+            @mouseup="release($event)">
+          </canvas>
+        </div>
+        <span slot="footer">
+          <el-button icon="fa fa-pause" @click="animate(false)" v-if="preview.animation"> Pause </el-button>
+          <el-button icon="fa fa-play" @click="animate(true)" v-else> Play </el-button>
+          <el-button icon="fa fa-photo" @click="cover"> Cover </el-button>
+          <el-button icon="fa fa-trash" @click="preview.clear()"> Clear </el-button>
+          <el-button @click="dialogVisible = false"> Cancel </el-button>
+        </span>
+      </el-dialog>
+      <el-upload id="upload" drag action="false" :http-request="empty" :before-upload="upload" :show-file-list="false" accept="image/*">
+        <div slot="tip" class="el-upload__tip">jpg/png files with a size less than 500kb</div>
+        <i class="el-icon-upload"></i>
+        <div class="el-upload__text">Drop file here or
+          <em>click to upload</em>
+        </div>
+      </el-upload>
+      <transition-group name="flip-list" tag="ul" class="el-upload-list el-upload-list--picture grow">
+        <li v-for="(layer, index) in layers" :key="layer.uid" class="el-upload-list__item" :class="selected == index && 'selected'">
+          <img :src="layer.type == 'picture' ? layer.src : '../assets/img/text.png'" :alt="layer.name" class="el-upload-list__item-thumbnail" @click="choose(index)">
+          <div class="name">{{ layer.name }}</div>
+          <el-button type="text" icon="fa fa-chevron-up" :disabled="index === 0" @click="raise(index)" />
+          <el-button type="text" icon="fa fa-chevron-down" :disabled="index === layers.length - 1" @click="lower(index)" />
+          <el-button type="text" icon="fa fa-image" @click="conversion(index)" />
+          <i class="el-icon-close" @click="remove(index)"></i>
+        </li>
+      </transition-group>
+    </el-col>
+  </el-row>
 </template>
 
 <script>
-  import Drawer from './Drawer'
-  import Preview from './Preview'
+  import Drawer from '../lib/Drawer'
+  import Preview from '../lib/Preview'
   import OrderForm from './OrderForm.vue'
 
   export default {
     name: 'app',
+    components: {
+      OrderForm
+    },
     data() {
       return {
         dialogVisible: false,
@@ -152,9 +155,6 @@
         preview: {},
         drawer: {}
       }
-    },
-    components: {
-      OrderForm
     },
     computed: {
       layers() {
@@ -276,6 +276,9 @@
       },
       conversion(index) {
         this.drawer.conversion(index);
+      },
+      source() {
+        return this.drawer.source;
       },
 
       start(event) {

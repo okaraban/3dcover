@@ -30,7 +30,7 @@
   export default {
     name: 'OrderForm',
     props: {
-      source: String
+      source: Function
     },
     data() {
       return {
@@ -48,7 +48,7 @@
         try {
           const res = await axios.post('/api/upload', {
             ...this.form,
-            source: this.source
+            source: this.source()
           });
           console.log(this.form);
         } catch (err) {

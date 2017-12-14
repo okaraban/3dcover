@@ -2,7 +2,7 @@ var path = require('path')
 var webpack = require('webpack')
 
 module.exports = {
-  entry: ['babel-polyfill', './src/main.js'],
+  entry: ['babel-polyfill', './main.js'],
   output: {
     path: path.resolve(__dirname, './dist'),
     publicPath: '/dist/',
@@ -18,6 +18,11 @@ module.exports = {
       }, {
         test: /\.vue$/,
         loader: 'vue-loader',
+        options: {
+          loaders: {
+          }
+          // other vue-loader options go here
+        }
       }, {
         test: /\.js$/,
         loader: 'babel-loader',
