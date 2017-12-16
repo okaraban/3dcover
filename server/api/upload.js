@@ -16,7 +16,7 @@ router.post('/', (req, res, next) => {
       fs.mkdirSync(dirname);
     }
     fs.writeFileSync(join(dirname, filename), base64, { encoding: 'base64' });
-    const url = `http://localhost:3000/uploads/${filename}`;
+    const url = `${req.protocol}://${req.hostname}/${dirname}/${filename}`;
     Mailer.send({
       to: email,
       template: 'thanks',
