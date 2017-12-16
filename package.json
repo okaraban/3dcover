@@ -9,7 +9,7 @@
     "url": "https://github.com/onufriievkyrylo/3dcover.git"
   },
   "scripts": {
-    "start": "node ./server/app.js",
+    "start": "npm run build && node ./server/app.js",
     "dev": "cross-env NODE_ENV=development webpack-dev-server --hot",
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules"
   },
@@ -21,7 +21,6 @@
     "fs-promise": "^2.0.3",
     "handlebars": "^4.0.11",
     "lodash": "^4.17.4",
-    "multer": "^1.3.0",
     "nodemailer": "^4.4.1",
     "three": "^0.88.0",
     "vue": "^2.4.4"
