@@ -6,6 +6,8 @@ const { join } = require('path');
 
 const app = express();
 
+app.set('port', (process.env.PORT || 3000));
+
 const api = require('./api');
 
 app.use(bodyParser.json({ limit: '10mb' }));
@@ -26,6 +28,6 @@ app.use((req, res, next) => {
 
 app.use(ErrorHandler);
 
-app.listen(3000, () => {
-  console.log('Server listen on port 3000!');
+app.listen(app.get('port'), () => {
+  console.log('Running on port', app.get('port'));
 });
