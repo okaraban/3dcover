@@ -96,10 +96,7 @@
       async confirm() {
         try {
           const res = await axios.post('/api/upload', {
-            firstname: this.firstname,
-            lastname: this.lastname,
-            phone: this.phone,
-            email: this.email,
+            ...this.form,
             source: this.source()
           });
           this.dialogFormVisible = false;
