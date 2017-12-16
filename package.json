@@ -9,9 +9,9 @@
     "url": "https://github.com/onufriievkyrylo/3dcover.git"
   },
   "scripts": {
-    "start": "npm run build && node ./server/app.js",
+    "start": "node ./server/app.js",
     "dev": "cross-env NODE_ENV=development webpack-dev-server --hot",
-    "build": "webpack --progress --hide-modules"
+    "build": "cross-env NODE_ENV=production webpack --progress --hide-modules"
   },
   "dependencies": {
     "axios": "^0.17.1",
