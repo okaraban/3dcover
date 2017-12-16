@@ -22,7 +22,8 @@
     "lodash": "^4.17.4",
     "nodemailer": "^4.4.1",
     "three": "^0.88.0",
-    "vue": "^2.4.4"
+    "vue": "^2.4.4",
+    "vuelidate": "^0.6.1"
   },
   "browserslist": [
     "> 1%",
