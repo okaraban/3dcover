@@ -3,14 +3,19 @@ const router = Router();
 const Mailer = require('../utils/Mailer');
 const { join } = require('path');
 const crypto = require('crypto');
-const { writeFile } = require('fs-promise');
+const fs = require('fs');
 
-router.post('/', async (req, res, next) => {
+const dirname = 'uploads';
+
+router.post('/', (req, res, next) => {
   try {
     const { email, firstname, lastname, source } = req.body;
     const filename = `${Date.now()}.${crypto.randomBytes(8).toString('hex')}.png`;
     const base64 = source.split(';base64,').pop();
-    await writeFile(join('./uploads', filename), base64, { encoding: 'base64' });
+    if (!fs.existsSync(dirname)) {
+      fs.mkdirSync(dirname);
+    }
+    fs.writeFileSync(join(dirname, filename), base64, { encoding: 'base64' });
     const url = `http://localhost:3000/uploads/${filename}`;
     Mailer.send({
       to: email,
