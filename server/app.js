@@ -8,8 +8,7 @@ const app = express();
 
 const api = require('./api');
 
-app.use(bodyParser.urlencoded({ extended: false }))
-app.use(bodyParser.json())
+app.use(bodyParser.json({ limit: '10mb' }));
 
 app.use('/dist', express.static('dist'));
 app.use('/assets', express.static('assets'));
