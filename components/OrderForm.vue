@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <el-button type="primary" icon="fa fa-paper-plane" @click="dialogFormVisible = true"> Send to the Server </el-button>
+  <div class="fluid wrapper">
+    <el-button type="primary" icon="fa fa-paper-plane" @click="dialogFormVisible = true" class="fluid"> Send to the Server </el-button>
     <el-dialog title="Send to the Server" :visible.sync="dialogFormVisible">
       <el-form :model="form">
         <el-form-item label="First name">
@@ -50,7 +50,7 @@
             ...this.form,
             source: this.source()
           });
-          console.log(this.form);
+          this.dialogFormVisible = false;
         } catch (err) {
           console.error(err);
         } 
@@ -58,3 +58,12 @@
     }
   };
 </script>
+
+<style>
+  .fluid {
+    width: 100%;
+  }
+  .wrapper {
+    margin-top: 10px;
+  }
+</style>

@@ -147,7 +147,6 @@
           color: '#54d595',
           width: 10
         },
-        baseColor: '#ffffff',
         sceneColor: '#ffffff',
         animation: false,
         mode: 0b0001, /// draw, text, resize, move
