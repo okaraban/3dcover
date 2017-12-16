@@ -68,12 +68,12 @@
           Sorry your browser doesn't seem to support webgl! :(
         </canvas>
       </div>
-      <el-dialog
+      <el-dialog  
         custom-class="column"
         :visible.sync="dialogVisible"
         :fullscreen="true">
         <span slot="title">
-          <el-button type="primary" icon="fa fa-paper-plane"> Send to the Server </el-button>
+          <order-form :source="source" />
         </span>
         <div id="previewMax" ref="previewMax">
           <canvas id="max3d" ref="max3d"
