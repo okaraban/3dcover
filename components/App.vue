@@ -99,7 +99,12 @@
       </el-upload>
       <transition-group name="flip-list" tag="ul" class="el-upload-list el-upload-list--picture grow">
         <li v-for="(layer, index) in layers" :key="layer.uid" class="el-upload-list__item" :class="selected == index && 'selected'">
-          <img :src="layer.type == 'picture' ? layer.src : '../assets/img/text.png'" :alt="layer.name" class="el-upload-list__item-thumbnail" @click="choose(index)">
+          <img
+            :src="layer.type == 'picture' ? layer.src : `../assets/img/${layer.type}.png`"
+            :alt="layer.name"
+            class="el-upload-list__item-thumbnail"
+            @click="choose(index)"
+          />
           <div class="name">{{ layer.name }}</div>
           <el-button type="text" icon="fa fa-chevron-up" :disabled="index === 0" @click="raise(index)" />
           <el-button type="text" icon="fa fa-chevron-down" :disabled="index === layers.length - 1" @click="lower(index)" />
@@ -344,7 +349,10 @@
           }, 5);
         }
       },
-      empty() {}
+      empty() {},
+      objexport() {
+        this.preview.export();
+      }
     },
     created() {
       document.body.addEventListener('keypress', (event => {

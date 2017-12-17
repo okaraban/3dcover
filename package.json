@@ -27,6 +27,7 @@
     "lodash": "^4.17.4",
     "nodemailer": "^4.4.1",
     "three": "^0.88.0",
+    "three-obj-exporter": "0.0.1",
     "vue": "^2.4.4",
     "vuelidate": "^0.6.1"
   },

@@ -4,16 +4,16 @@
     <el-dialog top="3vh" append-to-body title="Send to the Server" :visible.sync="dialogFormVisible">
       <el-form>
         <el-form-item :label="firstnameLabel" :class="{ 'error': $v.form.firstname.$error }">
-          <el-input v-model="form.firstname" auto-complete="off" @input="$v.form.firstname.$touch()"></el-input>
+          <el-input v-model="form.firstname" auto-complete="off" placeholder="John" @input="$v.form.firstname.$touch()"></el-input>
         </el-form-item>
         <el-form-item :label="lastnameLabel" :class="{ 'error': $v.form.lastname.$error }">
-          <el-input v-model="form.lastname" auto-complete="off" @input="$v.form.lastname.$touch()"></el-input>
+          <el-input v-model="form.lastname" auto-complete="off" placeholder="Doe" @input="$v.form.lastname.$touch()"></el-input>
         </el-form-item>
         <el-form-item :label="phoneLabel" :class="{ 'error': $v.form.phone.$error }">
-          <el-input v-model="form.phone" auto-complete="off" @input="$v.form.phone.$touch()"></el-input>
+          <el-input v-model="form.phone" auto-complete="off" placeholder="+(380) XX-XXX-XXXX" @input="$v.form.phone.$touch()"></el-input>
         </el-form-item>
         <el-form-item :label="emailLabel" :class="{ 'error': $v.form.email.$error }">
-          <el-input v-model="form.email" auto-complete="off" @input="$v.form.email.$touch()"></el-input>
+          <el-input v-model="form.email" auto-complete="off" placeholder="address@email.com" @input="$v.form.email.$touch()"></el-input>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
