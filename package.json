@@ -1,6 +1,6 @@
 {
-  "name": "3dcup",
-  "description": "3dcover",
+  "name": "wrap3d",
+  "description": "Wrap3D - the simple application for wrapping a 3d model with your own image",
   "version": "1.0.0",
   "author": "Kyrylo <kyrylo.onufriiev@gmail.com>",
   "license": "MIT",
@@ -13,6 +13,11 @@
     "dev": "cross-env NODE_ENV=development webpack-dev-server --hot",
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules"
   },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 8"
+  ],
   "dependencies": {
     "axios": "^0.17.1",
     "body-parser": "^1.18.2",
@@ -25,11 +30,6 @@
     "vue": "^2.4.4",
     "vuelidate": "^0.6.1"
   },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not ie <= 8"
-  ],
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
