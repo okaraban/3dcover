@@ -68,7 +68,7 @@
           Sorry your browser doesn't seem to support webgl! :(
         </canvas>
       </div>
-      <el-dialog  
+      <el-dialog
         custom-class="column"
         :visible.sync="dialogVisible"
         :fullscreen="true">

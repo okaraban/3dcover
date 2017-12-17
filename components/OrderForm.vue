@@ -1,7 +1,7 @@
 <template>
   <div class="wrapper">
     <el-button type="primary" icon="fa fa-paper-plane" @click="dialogFormVisible = true"> Send to the Server </el-button>
-    <el-dialog append-to-body title="Send to the Server" :visible.sync="dialogFormVisible">
+    <el-dialog top="3vh" append-to-body title="Send to the Server" :visible.sync="dialogFormVisible">
       <el-form>
         <el-form-item :label="firstnameLabel" :class="{ 'error': $v.form.firstname.$error }">
           <el-input v-model="form.firstname" auto-complete="off" @input="$v.form.firstname.$touch()"></el-input>
