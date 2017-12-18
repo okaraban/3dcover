@@ -35,6 +35,8 @@
             <el-button :class="onDraw && 'selected'" type="text" icon="fa fa-paint-brush" @click="changeMode('draw')"> Draw </el-button>
             <el-button :class="onMove && 'selected'" type="text" icon="fa fa-arrows" @click="changeMode('move')"> Move </el-button>
             <el-button type="text" icon="fa fa-trash" @click="drawer.drop()"> Clear </el-button>
+            <el-button type="text" icon="fa fa-undo" @click="drawer.undo()"> Undo </el-button>
+            <el-button type="text" icon="fa fa-repeat" @click="drawer.redo()"> Redo </el-button>
           </div>
         </el-col>
         <el-col :span="22">
@@ -157,13 +159,16 @@
         mode: 0b0001, /// draw, text, resize, move
         selected: -1,
         preview: {},
-        drawer: {}
+        drawer: {},
+        layers: []
+      }
+    },
+    watch: {
+      'drawer.layers.observable'() {
+        this.layers = this.drawer.layers.array;
       }
     },
     computed: {
-      layers() {
-        return this.drawer.layers;
-      },
       onDraw() {
         return this.mode & 0b1000;
       },
@@ -236,20 +241,23 @@
             break;
         }
       },
-      upload(file) {
+      async upload(file) {
         if (this.selected >= 0) {
           this.selected += 1;
         }
-        this.drawer.upload(file);
+        await this.drawer.upload(file);
       },  
+      cover() {
+        this.preview.base64 = this.drawer.source;
+      },
+      source() {
+        return this.drawer.source;
+      },
       remove(layer) {
         if (layer == this.selected) {
           this.selected = -1;
         }
         this.drawer.remove(layer);
-      },
-      cover() {
-        this.preview.base64 = this.drawer.source;
       },
       raise(layer) {
         if (this.selected == layer) {
@@ -280,9 +288,6 @@
       },
       conversion(index) {
         this.drawer.conversion(index);
-      },
-      source() {
-        return this.drawer.source;
       },
 
       start(event) {
@@ -340,13 +345,13 @@
       show() {
         this.dialogVisible = true;
         if (!this.mirror) {
-          setTimeout(() => {
+          this.$nextTick(() => {
             this.mirror = this.preview.mirror(this.$refs.max3d, {
               width: this.$refs.previewMax.clientWidth,
               height: this.$refs.previewMax.clientHeight,
             });
             this.mirror.render();
-          }, 5);
+          });
         }
       },
       empty() {},
@@ -377,7 +382,6 @@
         width: this.$refs.previewMini.clientWidth,
         height: this.$refs.previewMini.clientHeight,
         sceneColor: this.sceneColor,
-        modelColor: this.baseColor,
         animation: false
       });
       this.preview.render();
