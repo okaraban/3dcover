@@ -35,8 +35,8 @@
             <el-button :class="onDraw && 'selected'" type="text" icon="fa fa-paint-brush" @click="changeMode('draw')"> Draw </el-button>
             <el-button :class="onMove && 'selected'" type="text" icon="fa fa-arrows" @click="changeMode('move')"> Move </el-button>
             <el-button type="text" icon="fa fa-trash" @click="drawer.drop()"> Clear </el-button>
-            <el-button type="text" icon="fa fa-undo" @click="drawer.undo()"> Undo </el-button>
-            <el-button type="text" icon="fa fa-repeat" @click="drawer.redo()"> Redo </el-button>
+            <!-- <el-button type="text" icon="fa fa-undo" @click="drawer.undo()"> Undo </el-button>
+            <el-button type="text" icon="fa fa-repeat" @click="drawer.redo()"> Redo </el-button> -->
           </div>
         </el-col>
         <el-col :span="22">
@@ -44,6 +44,7 @@
             <canvas id="d2" ref="d2"
               @mousedown="start($event)"
               @mousemove="action($event)"
+              @dblclick="focus($event)"
               @mouseup="stop($event)"
               @mouseout="stop($event)">
             </canvas>
@@ -56,9 +57,9 @@
     </el-col>
     <el-col :span="6" class="column">
       <div class="tool horizontal space around">
+        <el-button type="text" icon="fa fa-share" @click="cover"> Cover </el-button>
         <el-button type="text" icon="fa fa-pause" @click="animate(false)" v-if="preview.animation"> Pause </el-button>
         <el-button type="text" icon="fa fa-play" @click="animate(true)" v-else> Play </el-button>
-        <el-button type="text" icon="fa fa-share" @click="cover"> Cover </el-button>
         <el-button type="text" icon="fa fa-trash" @click="preview.clear()"> Clear </el-button>
         <span class="block title">
           <el-color-picker v-model="sceneColor" size="mini" @change="changeSceneColor"></el-color-picker>
@@ -152,7 +153,7 @@
         },
         line: {
           color: '#54d595',
-          width: 10
+          width: 100
         },
         sceneColor: '#ffffff',
         animation: false,
@@ -242,11 +243,11 @@
         }
       },
       async upload(file) {
-        if (this.selected >= 0) {
-          this.selected += 1;
-        }
         await this.drawer.upload(file);
-      },  
+        this.drawer.focus(0);
+        this.selected = 0;
+        this.changeMode('resize');
+      },
       cover() {
         this.preview.base64 = this.drawer.source;
       },
@@ -286,10 +287,15 @@
           this.changeMode('resize');
         }
       },
+      focus(event) {
+        const layer = this.drawer.layer(event.offsetX, event.offsetY);
+        this.drawer.focus(layer);
+        this.selected = layer;
+        this.changeMode('resize');
+      },
       conversion(index) {
         this.drawer.conversion(index);
       },
-
       start(event) {
         if (this.onDraw) {
           return this.mouse = this.drawer.helpers.draw(
@@ -308,22 +314,35 @@
         }
         if (this.onResize) {
           this.mouse = this.drawer.helpers.resize(event.offsetX, event.offsetY);
-          if (!this.mouse.next().done)
-            return
+          if (this.mouse.next().done) {
+            this.mouse = this.drawer.helpers.rotate(event.offsetX, event.offsetY);
+            if (!this.mouse.next().done) {
+              return;
+            }
+          } else {
+            return;
+          }
         }
         if (this.onMove) {
           this.mouse = this.drawer.helpers.move(event.offsetX, event.offsetY);
-        }
+        } 
       },
       action(event) {
         if (this.mouse) {
           this.mouse.next({ x: event.offsetX, y: event.offsetY });
+        } else {
+          this.hover.next({ x: event.offsetX, y: event.offsetY });
         }
       },
       stop(event) {
         if (this.mouse) {
           this.mouse.next();
           this.mouse = false;
+          if (this.onDraw) {
+            this.drawer.focus(0);
+            this.selected = 0;
+            this.changeMode('resize');
+          }
         }
       },
 
@@ -355,9 +374,6 @@
         }
       },
       empty() {},
-      objexport() {
-        this.preview.export();
-      }
     },
     created() {
       document.body.addEventListener('keypress', (event => {
@@ -368,6 +384,13 @@
       document.body.addEventListener('keydown', (event => {
         if (this.onText && this.keyboard && event.key == 'Backspace') {
           this.keyboard.next(event.key);
+        } else if (this.onText && this.keyboard && event.key == 'Enter') {
+          this.drawer.focus(0);
+          this.selected = 0;
+          this.changeMode('resize');
+        } else if (this.selected != -1 && event.key == 'Delete') {
+          this.drawer.remove(this.selected);
+          this.selected = -1;
         }
       }).bind(this));
     },
@@ -377,6 +400,7 @@
         height: this.$refs.drawer.clientHeight,
         scale: 2
       });
+      this.hover = this.drawer.helpers.hover();
       this.preview = new Preview(this.$refs.mini3d, {
         path: '../assets/models/cup.json',
         width: this.$refs.previewMini.clientWidth,
