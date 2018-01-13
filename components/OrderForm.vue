@@ -97,7 +97,8 @@
         try {
           const res = await axios.post('/api/upload', {
             ...this.form,
-            source: this.source()
+            source: this.source(),
+            model: this.model()
           });
           this.dialogFormVisible = false;
         } catch (err) {

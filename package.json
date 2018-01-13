@@ -19,6 +19,7 @@
     "not ie <= 8"
   ],
   "dependencies": {
+    "@doodle3d/threejs-export-obj": "0.0.8",
     "axios": "^0.17.1",
     "body-parser": "^1.18.2",
     "element-ui": "^2.0.5",

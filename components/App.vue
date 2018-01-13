@@ -60,6 +60,7 @@
         <el-button type="text" icon="fa fa-share" @click="cover"> Cover </el-button>
         <el-button type="text" icon="fa fa-pause" @click="animate(false)" v-if="preview.animation"> Pause </el-button>
         <el-button type="text" icon="fa fa-play" @click="animate(true)" v-else> Play </el-button>
+        <el-button type="text" icon="fa fa-download" @click="download"> Download </el-button>
         <el-button type="text" icon="fa fa-trash" @click="preview.clear()"> Clear </el-button>
         <span class="block title">
           <el-color-picker v-model="sceneColor" size="mini" @change="changeSceneColor"></el-color-picker>
@@ -88,7 +89,8 @@
         <span slot="footer">
           <el-button icon="fa fa-pause" @click="animate(false)" v-if="preview.animation"> Pause </el-button>
           <el-button icon="fa fa-play" @click="animate(true)" v-else> Play </el-button>
-          <el-button icon="fa fa-photo" @click="cover"> Cover </el-button>
+          <el-button icon="fa fa-share" @click="cover"> Cover </el-button>
+          <el-button icon="fa fa-download" @click="download"> Download </el-button>
           <el-button icon="fa fa-trash" @click="preview.clear()"> Clear </el-button>
           <el-button @click="dialogVisible = false"> Cancel </el-button>
         </span>
@@ -208,6 +210,11 @@
       }
     },
     methods: {
+      async download() {
+        const blob = await this.preview.export();
+        const url = window.URL.createObjectURL(blob);
+        location.replace(url);
+      },
       animate(animation) {
         this.preview.animation = this.animation = animation;
       },
